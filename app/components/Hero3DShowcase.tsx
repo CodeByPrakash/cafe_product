@@ -291,12 +291,12 @@ export default function Hero3DShowcase({
 
     return (
       <div
-        className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none overflow-hidden ${
+        className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none overflow-hidden px-4 sm:px-8 ${
           isForegroundOutline ? "z-[28]" : "z-[8]"
         }`}
       >
         <div
-          className={`flex flex-col items-center justify-center text-center transition-transform duration-500 ease-out ${
+          className={`flex flex-col items-center justify-center text-center transition-transform duration-500 ease-out max-w-full ${
             isFinale && !isForegroundOutline ? "opacity-15 scale-90" : "opacity-100 scale-100"
           }`}
           style={{
@@ -304,16 +304,17 @@ export default function Hero3DShowcase({
           }}
         >
           <span
-            className="font-display font-extrabold text-5xl sm:text-7xl md:text-8xl lg:text-[10rem] xl:text-[12rem] leading-[0.88] tracking-tight uppercase whitespace-nowrap select-none"
+            className="font-display font-bold text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] xl:text-[6.8rem] 2xl:text-[7.6rem] leading-[0.92] tracking-normal uppercase whitespace-nowrap select-none max-w-full"
             style={
               isForegroundOutline
                 ? {
                     color: "transparent",
-                    WebkitTextStroke: "1.8px #FFF9F0",
+                    WebkitTextStroke: "2px #FFF9F0",
+                    filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.7))",
                   }
                 : {
-                    color: "rgba(255, 249, 240, 0.9)",
-                    filter: "drop-shadow(0 8px 30px rgba(0,0,0,0.45))",
+                    color: "rgba(255, 249, 240, 0.94)",
+                    filter: "drop-shadow(0 10px 32px rgba(0,0,0,0.55))",
                   }
             }
           >
@@ -321,7 +322,7 @@ export default function Hero3DShowcase({
           </span>
           {subheadText && (
             <span
-              className="font-sans font-extrabold text-[10px] sm:text-xs md:text-sm lg:text-base tracking-[0.4em] uppercase mt-3 sm:mt-5 whitespace-nowrap select-none"
+              className="font-sans font-extrabold text-[10px] sm:text-xs md:text-sm lg:text-base tracking-[0.3em] uppercase mt-2.5 sm:mt-4 whitespace-nowrap select-none opacity-90"
               style={
                 isForegroundOutline
                   ? {
@@ -330,7 +331,6 @@ export default function Hero3DShowcase({
                     }
                   : {
                       color: "#D99352",
-                      opacity: 0.9,
                     }
               }
             >

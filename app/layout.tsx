@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, Manrope, Syne, Cinzel } from "next/font/google";
+import { Playfair_Display, Manrope, Oswald, Cinzel } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "./context/CartContext";
 
@@ -10,11 +10,11 @@ const playfair = Playfair_Display({
   weight: ["400", "500", "600", "700", "800"],
 });
 
-const syne = Syne({
+const oswald = Oswald({
   variable: "--font-display",
   subsets: ["latin"],
   display: "swap",
-  weight: ["700", "800"],
+  weight: ["600", "700"],
 });
 
 const cinzel = Cinzel({
@@ -77,7 +77,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${playfair.variable} ${manrope.variable} ${syne.variable} ${cinzel.variable} h-full`}
+      className={`${playfair.variable} ${manrope.variable} ${oswald.variable} ${cinzel.variable} h-full`}
     >
       <body className="min-h-full font-sans antialiased text-[#382014] bg-[#F7EBDD] selection:bg-[#B8753D] selection:text-[#FFF9F0]">
         <SmoothScroll>

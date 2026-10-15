@@ -47,7 +47,7 @@
 }
 
 .font-display {
-  font-family: var(--font-display), var(--font-cinzel), var(--font-serif), sans-serif;
+  font-family: var(--font-display), var(--font-sans), sans-serif;
 }
 
 .font-cinzel {
