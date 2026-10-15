@@ -1,7 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Manrope, Oswald, Cinzel } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { CartProvider } from "./context/CartContext";
+
+const stormfaze = localFont({
+  src: "../public/font/Stormfaze.otf",
+  variable: "--font-stormfaze",
+  display: "swap",
+});
 
 const playfair = Playfair_Display({
   variable: "--font-serif",
@@ -77,7 +84,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${playfair.variable} ${manrope.variable} ${oswald.variable} ${cinzel.variable} h-full`}
+      className={`${playfair.variable} ${manrope.variable} ${oswald.variable} ${cinzel.variable} ${stormfaze.variable} h-full`}
     >
       <body className="min-h-full font-sans antialiased text-[#382014] bg-[#F7EBDD] selection:bg-[#B8753D] selection:text-[#FFF9F0]">
         <SmoothScroll>

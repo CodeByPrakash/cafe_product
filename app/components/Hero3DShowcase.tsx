@@ -223,15 +223,27 @@ export default function Hero3DShowcase({
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
 
+  const STAGE_CENTERS = [0.08, 0.28, 0.48, 0.68, 0.88];
+
     const loop = () => {
       // Smooth linear interpolation for video scrub effect
       smoothProgress.current += (targetProgress.current - smoothProgress.current) * 0.12;
       const rounded = Math.round(smoothProgress.current * 1000) / 1000;
       setCurrentProgress(rounded);
 
-      // Determine active stage index (4 stages + 1 finale)
-      let stage = Math.min(3, Math.floor(rounded / 0.24));
-      if (rounded >= 0.85) stage = 4;
+      // Determine active stage index (4 stages + 1 finale) locked to STAGE_CENTERS midpoints
+      let stage = 0;
+      if (rounded >= 0.78) {
+        stage = 4;
+      } else if (rounded >= 0.58) {
+        stage = 3;
+      } else if (rounded >= 0.38) {
+        stage = 2;
+      } else if (rounded >= 0.18) {
+        stage = 1;
+      } else {
+        stage = 0;
+      }
       setActiveStageIndex(stage);
 
       animId = requestAnimationFrame(loop);
@@ -254,12 +266,14 @@ export default function Hero3DShowcase({
     setMouseCoords({ x, y });
   }, []);
 
+  const STAGE_CENTERS = [0.08, 0.28, 0.48, 0.68, 0.88];
+
   // Jump to specific stage
   const scrollToStage = (stageIdx: number) => {
     const container = containerRef.current;
     if (!container) return;
     const totalScrollable = container.offsetHeight - window.innerHeight;
-    const targetScroll = container.offsetTop + totalScrollable * (stageIdx * 0.245);
+    const targetScroll = container.offsetTop + totalScrollable * STAGE_CENTERS[stageIdx];
 
     // If Lenis is active on window, use it for buttery smooth jump
     const lenis = (window as unknown as { __lenisInstance?: { scrollTo: (y: number, opts?: object) => void } }).__lenisInstance;
@@ -280,64 +294,92 @@ export default function Hero3DShowcase({
 
   // Safe active stage item
   const activeItem = HERO_STAGES[Math.min(3, activeStageIndex)] || HERO_STAGES[0];
-  const isFinale = activeStageIndex >= 4 || currentProgress >= 0.84;
+  const isFinale = activeStageIndex >= 4 || currentProgress >= 0.78;
 
-  // Shared renderer for the 3D Depth Typography Sandwich (Zero displacement between solid & stroke)
+  // Shared renderer for the 3D Depth Typography Sandwich (Zero displacement between solid & stroke, 100% synced with images)
   const renderSandwichTypography = (isForegroundOutline: boolean) => {
-    const headlineText = isFinale ? "BREWTORIA" : activeItem.headline;
-    const subheadText = isFinale
-      ? "ARTISANAL SPECIALTY COFFEE & FRENCH BAKERY"
-      : activeItem.subhead || "";
-
     return (
       <div
         className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none overflow-hidden px-4 sm:px-8 ${
           isForegroundOutline ? "z-[28]" : "z-[8]"
         }`}
       >
-        <div
-          className={`flex flex-col items-center justify-center text-center transition-transform duration-500 ease-out max-w-full ${
-            isFinale && !isForegroundOutline ? "opacity-15 scale-90" : "opacity-100 scale-100"
-          }`}
-          style={{
-            transform: `translate3d(${mouseCoords.x * -24}px, ${mouseCoords.y * -16}px, 0)`,
-          }}
-        >
-          <span
-            className="font-display font-bold text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] xl:text-[6.8rem] 2xl:text-[7.6rem] leading-[0.92] tracking-normal uppercase whitespace-nowrap select-none max-w-full"
-            style={
-              isForegroundOutline
-                ? {
-                    color: "transparent",
-                    WebkitTextStroke: "2px #FFF9F0",
-                    filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.7))",
-                  }
-                : {
-                    color: "rgba(255, 249, 240, 0.94)",
-                    filter: "drop-shadow(0 10px 32px rgba(0,0,0,0.55))",
-                  }
-            }
-          >
-            {headlineText}
-          </span>
-          {subheadText && (
-            <span
-              className="font-sans font-extrabold text-[10px] sm:text-xs md:text-sm lg:text-base tracking-[0.3em] uppercase mt-2.5 sm:mt-4 whitespace-nowrap select-none opacity-90"
-              style={
-                isForegroundOutline
-                  ? {
-                      color: "transparent",
-                      WebkitTextStroke: "1px #D99352",
-                    }
-                  : {
-                      color: "#D99352",
-                    }
-              }
+        {/* Stages 0-3: Headlines rendered in 1:1 timeline lockstep with each product image */}
+        {HERO_STAGES.map((stage, idx) => {
+          const stageCenter = STAGE_CENTERS[idx];
+          const dist = Math.abs(currentProgress - stageCenter);
+          const opacity = Math.max(0, 1 - dist * 5.0);
+          const textTranslateY = (currentProgress - stageCenter) * -140;
+          const textScale = Math.max(0.85, 1 - dist * 0.65);
+
+          if (opacity <= 0.01) return null;
+
+          return (
+            <div
+              key={`stage-text-${stage.id}`}
+              className="absolute inset-0 flex flex-col items-center justify-center text-center will-change-transform max-w-full"
+              style={{
+                opacity,
+                transform: `translate3d(${mouseCoords.x * -24}px, ${textTranslateY + mouseCoords.y * -16}px, 0) scale(${textScale})`,
+                transition: "opacity 0.15s ease-out",
+              }}
             >
-              {subheadText}
+              <span
+                className="font-stormfaze text-4xl sm:text-6xl md:text-7xl lg:text-[5.2rem] xl:text-[6.5rem] 2xl:text-[7.4rem] leading-[0.92] tracking-normal uppercase whitespace-nowrap select-none max-w-full"
+                style={
+                  isForegroundOutline
+                    ? {
+                        color: "transparent",
+                        WebkitTextStroke: "2px #FFF9F0",
+                        filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.7))",
+                      }
+                    : {
+                        color: "rgba(255, 249, 240, 0.94)",
+                        filter: "drop-shadow(0 10px 32px rgba(0,0,0,0.55))",
+                      }
+                }
+              >
+                {stage.headline}
+              </span>
+              {stage.subhead && (
+                <span
+                  className="font-sans font-extrabold text-[10px] sm:text-xs md:text-sm lg:text-base tracking-[0.3em] uppercase mt-2.5 sm:mt-4 whitespace-nowrap select-none opacity-90"
+                  style={
+                    isForegroundOutline
+                      ? {
+                          color: "transparent",
+                          WebkitTextStroke: "1px #D99352",
+                        }
+                      : {
+                          color: "#D99352",
+                        }
+                  }
+                >
+                  {stage.subhead}
+                </span>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Stage 4: Finale Headline (BREWTORIA) */}
+        {isFinale && (
+          <div
+            className={`absolute inset-0 flex flex-col items-center justify-center text-center transition-all duration-700 ease-out max-w-full ${
+              isForegroundOutline ? "opacity-0" : "opacity-15 scale-90"
+            }`}
+            style={{
+              transform: `translate3d(${mouseCoords.x * -24}px, ${mouseCoords.y * -16}px, 0)`,
+            }}
+          >
+            <span className="font-stormfaze text-5xl sm:text-7xl md:text-8xl lg:text-[6.8rem] xl:text-[8rem] leading-[0.92] tracking-normal uppercase whitespace-nowrap select-none max-w-full text-[#FFF9F0]/85">
+              BREWTORIA
             </span>
-          )}
-        </div>
+            <span className="font-sans font-extrabold text-[11px] sm:text-xs md:text-sm lg:text-base tracking-[0.35em] text-[#D99352] uppercase mt-3 sm:mt-5 opacity-90">
+              ARTISANAL SPECIALTY COFFEE & FRENCH BAKERY
+            </span>
+          </div>
+        )}
       </div>
     );
   };
@@ -417,14 +459,14 @@ export default function Hero3DShowcase({
         {!isFinale && (
           <div className="absolute inset-0 pointer-events-none z-[18] overflow-hidden flex items-center justify-center">
             {HERO_STAGES.map((stage, idx) => {
-              const stageCenter = idx * 0.24;
+              const stageCenter = STAGE_CENTERS[idx];
               const distFromCenter = Math.abs(currentProgress - stageCenter);
 
               const isCurrent = activeStageIndex === idx;
-              const opacity = Math.max(0, 1 - distFromCenter * 5.5);
+              const opacity = Math.max(0, 1 - distFromCenter * 5.0);
               const scale = Math.max(0.62, 0.98 - distFromCenter * 1.55);
-              const translateY = (currentProgress - stageCenter) * -350;
-              const rotate = (idx % 2 === 0 ? -4 : 5) + (currentProgress - stageCenter) * 20;
+              const translateY = (currentProgress - stageCenter) * -340;
+              const rotate = (idx % 2 === 0 ? -4 : 5) + (currentProgress - stageCenter) * 18;
 
               if (opacity <= 0.01) return null;
 
