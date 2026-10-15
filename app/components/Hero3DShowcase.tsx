@@ -9,6 +9,7 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Sparkles,
   Clock,
   MapPin,
@@ -202,9 +203,45 @@ export default function Hero3DShowcase({
   // Scroll tracking state
   const targetProgress = useRef(0);
   const smoothProgress = useRef(0);
+  const scrollCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [currentProgress, setCurrentProgress] = useState(0);
   const [activeStageIndex, setActiveStageIndex] = useState(0);
   const [mouseCoords, setMouseCoords] = useState({ x: 0, y: 0 });
+
+  // Initial scroll prompt canvas shimmer animation
+  useEffect(() => {
+    const canvas = scrollCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animId: number;
+    let frame = 0;
+
+    const render = () => {
+      frame++;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Subtle golden shimmer wave across the canvas pill
+      const grad = ctx.createLinearGradient(
+        (Math.sin(frame * 0.035) * 0.5 + 0.5) * canvas.width - 35,
+        0,
+        (Math.sin(frame * 0.035) * 0.5 + 0.5) * canvas.width + 35,
+        canvas.height
+      );
+      grad.addColorStop(0, "rgba(217, 147, 82, 0)");
+      grad.addColorStop(0.5, "rgba(255, 249, 240, 0.22)");
+      grad.addColorStop(1, "rgba(184, 117, 61, 0)");
+
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      animId = requestAnimationFrame(render);
+    };
+
+    animId = requestAnimationFrame(render);
+    return () => cancelAnimationFrame(animId);
+  }, []);
 
   // Update scroll progress with Lenis or native window scroll
   useEffect(() => {
@@ -298,7 +335,7 @@ export default function Hero3DShowcase({
 
   // Discrete, non-overlapping stage intervals: strictly prevents double-text / ghosting overlaps
   const STAGE_INTERVALS = [
-    { start: 0.00, enterEnd: 0.025, exitStart: 0.155, end: 0.18 }, // Stage 0: Latte
+    { start: 0.00, enterEnd: 0.00, exitStart: 0.155, end: 0.18 }, // Stage 0: Latte (100% visible immediately at progress 0)
     { start: 0.18, enterEnd: 0.205, exitStart: 0.355, end: 0.38 }, // Stage 1: Brownie
     { start: 0.38, enterEnd: 0.405, exitStart: 0.555, end: 0.58 }, // Stage 2: Croissant
     { start: 0.58, enterEnd: 0.605, exitStart: 0.755, end: 0.78 }, // Stage 3: Shake
@@ -322,8 +359,14 @@ export default function Hero3DShowcase({
           let textTranslateY = 0;
           let textScale = 1;
 
-          if (currentProgress < interval.enterEnd) {
-            // Snappy entrance: slides up into position
+          if (idx === 0 && currentProgress <= interval.exitStart) {
+            // Initial landing stage: 100% fully visible immediately from the very first frame at progress 0!
+            opacity = 1;
+            const t = interval.exitStart > 0 ? currentProgress / interval.exitStart : 0;
+            textTranslateY = t * -10;
+            textScale = 1;
+          } else if (currentProgress < interval.enterEnd) {
+            // Snappy entrance for subsequent stages (1, 2, 3): slides up into position
             const t = (currentProgress - interval.start) / (interval.enterEnd - interval.start);
             opacity = Math.max(0, Math.min(1, t));
             textTranslateY = (1 - t) * 55;
@@ -500,7 +543,14 @@ export default function Hero3DShowcase({
               const baseRotate = idx % 2 === 0 ? -4 : 4;
               let rotate = baseRotate;
 
-              if (currentProgress < interval.enterEnd) {
+              if (idx === 0 && currentProgress <= interval.exitStart) {
+                // Initial landing stage: 100% fully visible immediately from the very first frame at progress 0!
+                opacity = 1;
+                const t = interval.exitStart > 0 ? currentProgress / interval.exitStart : 0;
+                translateY = t * -16;
+                scale = 1;
+                rotate = baseRotate + t * 2;
+              } else if (currentProgress < interval.enterEnd) {
                 const t = (currentProgress - interval.start) / (interval.enterEnd - interval.start);
                 opacity = Math.max(0, Math.min(1, t));
                 translateY = (1 - t) * 85;
@@ -830,6 +880,50 @@ export default function Hero3DShowcase({
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* INITIAL SCROLL CANVAS & PROMPT:                                          */}
+        {/* Visible initially at progress 0, dissolves into invisibility on scroll   */}
+        {/* ========================================================================= */}
+        <div
+          onClick={() => scrollToStage(1)}
+          className={`absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-40 cursor-pointer pointer-events-auto transition-all duration-700 ease-out flex flex-col items-center gap-1.5 ${
+            currentProgress > 0.02
+              ? "opacity-0 pointer-events-none translate-y-6 scale-90"
+              : "opacity-100 translate-y-0 scale-100"
+          }`}
+          title="Click to scroll to next stage"
+        >
+          <div className="relative px-4 py-2 rounded-full bg-[#1E0F07]/85 backdrop-blur-xl border border-[#FFF9F0]/25 shadow-[0_8px_32px_rgba(0,0,0,0.6)] flex items-center gap-3 group hover:border-[#D99352] hover:bg-[#1E0F07] transition-all duration-300">
+            {/* Animated Canvas shimmer wave */}
+            <canvas
+              ref={scrollCanvasRef}
+              width={160}
+              height={40}
+              className="absolute inset-0 pointer-events-none rounded-full opacity-60"
+            />
+
+            {/* Mouse icon with bouncing wheel */}
+            <div className="relative z-10 w-4 h-6 rounded-full border-[1.8px] border-[#D99352] flex justify-center pt-1 shadow-[0_0_12px_rgba(217,147,82,0.5)]">
+              <div className="w-1 h-1.5 rounded-full bg-[#FFF9F0] animate-bounce" />
+            </div>
+
+            {/* Hint Text */}
+            <div className="relative z-10 flex flex-col leading-none">
+              <span className="text-[10px] font-sans font-extrabold uppercase tracking-[0.22em] text-[#FFF9F0] group-hover:text-[#D99352] transition-colors">
+                Scroll To Explore
+              </span>
+              <span className="text-[8px] font-mono text-[#D99352]/90 uppercase tracking-widest mt-0.5">
+                3D Product Showcase
+              </span>
+            </div>
+
+            {/* Bouncing Chevron Down */}
+            <div className="relative z-10 w-5 h-5 rounded-full bg-[#FFF9F0]/10 flex items-center justify-center group-hover:bg-[#D99352] group-hover:text-[#24130A] transition-colors">
+              <ChevronDown className="w-3.5 h-3.5 text-[#D99352] group-hover:text-[#24130A] animate-bounce transition-colors" />
             </div>
           </div>
         </div>
