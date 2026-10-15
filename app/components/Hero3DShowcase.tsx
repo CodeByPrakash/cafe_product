@@ -226,8 +226,8 @@ export default function Hero3DShowcase({
     const STAGE_CENTERS = [0.08, 0.28, 0.48, 0.68, 0.88];
 
     const loop = () => {
-      // Smooth linear interpolation for video scrub effect
-      smoothProgress.current += (targetProgress.current - smoothProgress.current) * 0.12;
+      // Silky smooth linear interpolation for high-inertia cinematic scrub effect
+      smoothProgress.current += (targetProgress.current - smoothProgress.current) * 0.085;
       const rounded = Math.round(smoothProgress.current * 1000) / 1000;
       setCurrentProgress(rounded);
 
@@ -296,6 +296,14 @@ export default function Hero3DShowcase({
   const activeItem = HERO_STAGES[Math.min(3, activeStageIndex)] || HERO_STAGES[0];
   const isFinale = activeStageIndex >= 4 || currentProgress >= 0.78;
 
+  // Discrete, non-overlapping stage intervals: strictly prevents double-text / ghosting overlaps
+  const STAGE_INTERVALS = [
+    { start: 0.00, enterEnd: 0.025, exitStart: 0.155, end: 0.18 }, // Stage 0: Latte
+    { start: 0.18, enterEnd: 0.205, exitStart: 0.355, end: 0.38 }, // Stage 1: Brownie
+    { start: 0.38, enterEnd: 0.405, exitStart: 0.555, end: 0.58 }, // Stage 2: Croissant
+    { start: 0.58, enterEnd: 0.605, exitStart: 0.755, end: 0.78 }, // Stage 3: Shake
+  ];
+
   // Shared renderer for the 3D Depth Typography Sandwich (Zero displacement between solid & stroke, 100% synced with images)
   const renderSandwichTypography = (isForegroundOutline: boolean) => {
     return (
@@ -303,13 +311,36 @@ export default function Hero3DShowcase({
         className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none overflow-hidden px-4 sm:px-8 ${isForegroundOutline ? "z-[28]" : "z-[8]"
           }`}
       >
-        {/* Stages 0-3: Headlines rendered in 1:1 timeline lockstep with each product image */}
+        {/* Stages 0-3: Exactly ONE headline rendered at a time, completely eliminating overlapping ghost text */}
         {HERO_STAGES.map((stage, idx) => {
-          const stageCenter = STAGE_CENTERS[idx];
-          const dist = Math.abs(currentProgress - stageCenter);
-          const opacity = Math.max(0, 1 - dist * 5.0);
-          const textTranslateY = (currentProgress - stageCenter) * -140;
-          const textScale = Math.max(0.85, 1 - dist * 0.65);
+          const interval = STAGE_INTERVALS[idx];
+          if (!interval || currentProgress < interval.start || currentProgress >= interval.end) {
+            return null;
+          }
+
+          let opacity = 1;
+          let textTranslateY = 0;
+          let textScale = 1;
+
+          if (currentProgress < interval.enterEnd) {
+            // Snappy entrance: slides up into position
+            const t = (currentProgress - interval.start) / (interval.enterEnd - interval.start);
+            opacity = Math.max(0, Math.min(1, t));
+            textTranslateY = (1 - t) * 55;
+            textScale = 0.94 + t * 0.06;
+          } else if (currentProgress > interval.exitStart) {
+            // Snappy exit: glides up and fades out before next stage begins
+            const t = (currentProgress - interval.exitStart) / (interval.end - interval.exitStart);
+            opacity = Math.max(0, Math.min(1, 1 - t));
+            textTranslateY = -t * 55;
+            textScale = 1 - t * 0.05;
+          } else {
+            // Crystal clear, 100% solid plateau (Zero overlapping with any other item)
+            const t = (currentProgress - interval.enterEnd) / (interval.exitStart - interval.enterEnd);
+            opacity = 1;
+            textTranslateY = (t - 0.5) * -12;
+            textScale = 1;
+          }
 
           if (opacity <= 0.01) return null;
 
@@ -324,7 +355,7 @@ export default function Hero3DShowcase({
               }}
             >
               <span
-                className="font-stormfaze text-5xl sm:text-7xl md:text-8xl lg:text-[6.2rem] xl:text-[7.8rem] 2xl:text-[8.8rem] leading-[0.9] tracking-tight uppercase whitespace-nowrap select-none max-w-full"
+                className="font-stormfaze text-5xl sm:text-7xl md:text-8xl lg:text-[6.2rem] xl:text-[7.8rem] 2xl:text-[8.8rem] leading-[0.9] tracking-[0.04em] sm:tracking-[0.06em] uppercase whitespace-nowrap select-none max-w-full"
                 style={
                   isForegroundOutline
                     ? {
@@ -370,7 +401,7 @@ export default function Hero3DShowcase({
               transform: `translate3d(${mouseCoords.x * -24}px, ${mouseCoords.y * -16}px, 0)`,
             }}
           >
-            <span className="font-stormfaze text-6xl sm:text-8xl md:text-9xl lg:text-[8rem] xl:text-[9.5rem] leading-[0.9] tracking-tight uppercase whitespace-nowrap select-none max-w-full text-[#FFF9F0]/85">
+            <span className="font-stormfaze text-6xl sm:text-8xl md:text-9xl lg:text-[8rem] xl:text-[9.5rem] leading-[0.9] tracking-[0.06em] sm:tracking-[0.08em] uppercase whitespace-nowrap select-none max-w-full text-[#FFF9F0]/85">
               BREWTORIA
             </span>
             <span className="font-sans font-extrabold text-[11px] sm:text-xs md:text-sm lg:text-base tracking-[0.35em] text-[#D99352] uppercase mt-3 sm:mt-5 opacity-90">
@@ -386,7 +417,7 @@ export default function Hero3DShowcase({
     <div
       ref={containerRef}
       id="home"
-      className="relative w-full h-[400vh] bg-[#1E0F07] selection:bg-[#B8753D] selection:text-[#FFF9F0]"
+      className="relative w-full h-[650vh] bg-[#1E0F07] selection:bg-[#B8753D] selection:text-[#FFF9F0]"
     >
       {/* STICKY VIEWPORT CONTAINER */}
       <div
@@ -457,14 +488,37 @@ export default function Hero3DShowcase({
         {!isFinale && (
           <div className="absolute inset-0 pointer-events-none z-[18] overflow-hidden flex items-center justify-center">
             {HERO_STAGES.map((stage, idx) => {
-              const stageCenter = STAGE_CENTERS[idx];
-              const distFromCenter = Math.abs(currentProgress - stageCenter);
+              const interval = STAGE_INTERVALS[idx];
+              if (!interval || currentProgress < interval.start || currentProgress >= interval.end) {
+                return null;
+              }
 
               const isCurrent = activeStageIndex === idx;
-              const opacity = Math.max(0, 1 - distFromCenter * 5.0);
-              const scale = Math.max(0.62, 0.98 - distFromCenter * 1.55);
-              const translateY = (currentProgress - stageCenter) * -340;
-              const rotate = (idx % 2 === 0 ? -4 : 5) + (currentProgress - stageCenter) * 18;
+              let opacity = 1;
+              let translateY = 0;
+              let scale = 1;
+              const baseRotate = idx % 2 === 0 ? -4 : 4;
+              let rotate = baseRotate;
+
+              if (currentProgress < interval.enterEnd) {
+                const t = (currentProgress - interval.start) / (interval.enterEnd - interval.start);
+                opacity = Math.max(0, Math.min(1, t));
+                translateY = (1 - t) * 85;
+                scale = 0.88 + t * 0.12;
+                rotate = baseRotate + (1 - t) * 4;
+              } else if (currentProgress > interval.exitStart) {
+                const t = (currentProgress - interval.exitStart) / (interval.end - interval.exitStart);
+                opacity = Math.max(0, Math.min(1, 1 - t));
+                translateY = -t * 85;
+                scale = 1 - t * 0.08;
+                rotate = baseRotate - t * 4;
+              } else {
+                const t = (currentProgress - interval.enterEnd) / (interval.exitStart - interval.enterEnd);
+                opacity = 1;
+                translateY = (t - 0.5) * -20;
+                scale = 1;
+                rotate = baseRotate + (t - 0.5) * 3;
+              }
 
               if (opacity <= 0.01) return null;
 
