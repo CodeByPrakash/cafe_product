@@ -223,7 +223,7 @@ export default function Hero3DShowcase({
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
 
-  const STAGE_CENTERS = [0.08, 0.28, 0.48, 0.68, 0.88];
+    const STAGE_CENTERS = [0.08, 0.28, 0.48, 0.68, 0.88];
 
     const loop = () => {
       // Smooth linear interpolation for video scrub effect
@@ -300,9 +300,8 @@ export default function Hero3DShowcase({
   const renderSandwichTypography = (isForegroundOutline: boolean) => {
     return (
       <div
-        className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none overflow-hidden px-4 sm:px-8 ${
-          isForegroundOutline ? "z-[28]" : "z-[8]"
-        }`}
+        className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none overflow-hidden px-4 sm:px-8 ${isForegroundOutline ? "z-[28]" : "z-[8]"
+          }`}
       >
         {/* Stages 0-3: Headlines rendered in 1:1 timeline lockstep with each product image */}
         {HERO_STAGES.map((stage, idx) => {
@@ -325,34 +324,34 @@ export default function Hero3DShowcase({
               }}
             >
               <span
-                className="font-stormfaze text-4xl sm:text-6xl md:text-7xl lg:text-[5.2rem] xl:text-[6.5rem] 2xl:text-[7.4rem] leading-[0.92] tracking-normal uppercase whitespace-nowrap select-none max-w-full"
+                className="font-stormfaze text-5xl sm:text-7xl md:text-8xl lg:text-[6.2rem] xl:text-[7.8rem] 2xl:text-[8.8rem] leading-[0.9] tracking-tight uppercase whitespace-nowrap select-none max-w-full"
                 style={
                   isForegroundOutline
                     ? {
-                        color: "transparent",
-                        WebkitTextStroke: "2px #FFF9F0",
-                        filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.7))",
-                      }
+                      color: "transparent",
+                      WebkitTextStroke: "2.2px #FFF9F0",
+                      filter: "drop-shadow(0 2px 10px rgba(0,0,0,0.7))",
+                    }
                     : {
-                        color: "rgba(255, 249, 240, 0.94)",
-                        filter: "drop-shadow(0 10px 32px rgba(0,0,0,0.55))",
-                      }
+                      color: "rgba(255, 249, 240, 0.95)",
+                      filter: "drop-shadow(0 12px 36px rgba(0,0,0,0.58))",
+                    }
                 }
               >
                 {stage.headline}
               </span>
               {stage.subhead && (
                 <span
-                  className="font-sans font-extrabold text-[10px] sm:text-xs md:text-sm lg:text-base tracking-[0.3em] uppercase mt-2.5 sm:mt-4 whitespace-nowrap select-none opacity-90"
+                  className="font-sans font-extrabold text-[11px] sm:text-xs md:text-sm lg:text-base tracking-[0.32em] uppercase mt-3 sm:mt-4 whitespace-nowrap select-none opacity-90"
                   style={
                     isForegroundOutline
                       ? {
-                          color: "transparent",
-                          WebkitTextStroke: "1px #D99352",
-                        }
+                        color: "transparent",
+                        WebkitTextStroke: "1px #D99352",
+                      }
                       : {
-                          color: "#D99352",
-                        }
+                        color: "#D99352",
+                      }
                   }
                 >
                   {stage.subhead}
@@ -365,14 +364,13 @@ export default function Hero3DShowcase({
         {/* Stage 4: Finale Headline (BREWTORIA) */}
         {isFinale && (
           <div
-            className={`absolute inset-0 flex flex-col items-center justify-center text-center transition-all duration-700 ease-out max-w-full ${
-              isForegroundOutline ? "opacity-0" : "opacity-15 scale-90"
-            }`}
+            className={`absolute inset-0 flex flex-col items-center justify-center text-center transition-all duration-700 ease-out max-w-full ${isForegroundOutline ? "opacity-0" : "opacity-15 scale-90"
+              }`}
             style={{
               transform: `translate3d(${mouseCoords.x * -24}px, ${mouseCoords.y * -16}px, 0)`,
             }}
           >
-            <span className="font-stormfaze text-5xl sm:text-7xl md:text-8xl lg:text-[6.8rem] xl:text-[8rem] leading-[0.92] tracking-normal uppercase whitespace-nowrap select-none max-w-full text-[#FFF9F0]/85">
+            <span className="font-stormfaze text-6xl sm:text-8xl md:text-9xl lg:text-[8rem] xl:text-[9.5rem] leading-[0.9] tracking-tight uppercase whitespace-nowrap select-none max-w-full text-[#FFF9F0]/85">
               BREWTORIA
             </span>
             <span className="font-sans font-extrabold text-[11px] sm:text-xs md:text-sm lg:text-base tracking-[0.35em] text-[#D99352] uppercase mt-3 sm:mt-5 opacity-90">
